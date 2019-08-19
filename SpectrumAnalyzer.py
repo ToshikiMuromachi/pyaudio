@@ -15,7 +15,7 @@ class PlotWindow:
     def __init__(self):
         # マイクインプット設定
         self.CHUNK = 1024  # 1度に読み取る音声のデータ幅
-        self.RATE = 16000  # サンプリング周波数
+        self.RATE = 44100  # サンプリング周波数 16000->441000
         self.update_seconds = 50  # 更新時間[ms]
         self.audio = pyaudio.PyAudio()
         self.stream = self.audio.open(format=pyaudio.paInt16,
@@ -32,7 +32,7 @@ class PlotWindow:
         self.win = pg.GraphicsWindow()
         self.win.setWindowTitle("SpectrumAnalyzer")
         self.plt = self.win.addPlot()  # プロットのビジュアル関係
-        self.plt.setYRange(0, 1000)  # y軸の制限
+        self.plt.setYRange(0, 1500)  # y軸の制限
 
         # アップデート時間設定
         self.timer = QtCore.QTimer()
@@ -50,14 +50,17 @@ class PlotWindow:
         self.axis = np.fft.fftfreq(len(self.data), d=1.0 / self.RATE)
         data = self.fft_data    #配列操作用の変数
         data[data < 5.0] = 0.0    #1より振幅が小さいものは捨てる
+        #print(np.round(data, 2))
         datamax = np.argmax(data)   #FFTされたものの一番大きいものを取り出す
         #print(data[datamax])
-        print(np.round(self.axis[datamax], 2))
+        #print(np.round(self.axis[datamax], 2))
 
         #ピッチをグラフにプロットするために配列を用意する
-        self.pitches = np.roll(self.pitches, -1)
-        self.pitches[99] = self.axis[datamax]
-        # datamax = self.fft_data.index(max(self.fft_data))
+        self.pitches = np.roll(self.pitches, -1)    #ピッチを左にずらす
+        self.nowPitch = abs(self.axis[datamax] * 0.8)
+        self.pitches[99] =  self.nowPitch   #最新のピッチ。鏡像現象対策で絶対値で出す。fukuno先輩のコードより0.8かけてあげる
+        print(self.nowPitch)
+        #print(self.RATE * 1 * self.pitches[99] / data.size) #ピッチ計算最終結果予定
         # print(self.fft_data.index(max(self.fft_data)))
         self.pitchX = np.linspace(0, 99, 100)
         self.plt.plot(x=self.pitchX, y=self.pitches, clear=True)
