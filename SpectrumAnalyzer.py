@@ -32,12 +32,15 @@ class PlotWindow:
         self.win = pg.GraphicsWindow()
         self.win.setWindowTitle("SpectrumAnalyzer")
         self.plt = self.win.addPlot()  # プロットのビジュアル関係
-        self.plt.setYRange(0, 10)  # y軸の制限
+        self.plt.setYRange(0, 1000)  # y軸の制限
 
         # アップデート時間設定
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(self.update_seconds)  # 10msごとにupdateを呼び出し
+
+        # グラフプロット用
+        self.pitches = np.zeros(100)
 
     def update(self):
         self.data = np.append(self.data, self.AudioInput())
@@ -45,12 +48,20 @@ class PlotWindow:
             self.data = self.data[1024:]
         self.fft_data = self.FFT_AMP(self.data)
         self.axis = np.fft.fftfreq(len(self.data), d=1.0 / self.RATE)
-        data = self.fft_data
-        print(np.argmax(data))
-        #print(data.index(max(data)))
+        data = self.fft_data    #配列操作用の変数
+        data[data < 5.0] = 0.0    #1より振幅が小さいものは捨てる
+        datamax = np.argmax(data)   #FFTされたものの一番大きいものを取り出す
+        #print(data[datamax])
+        print(np.round(self.axis[datamax], 2))
+
+        #ピッチをグラフにプロットするために配列を用意する
+        self.pitches = np.roll(self.pitches, -1)
+        self.pitches[99] = self.axis[datamax]
         # datamax = self.fft_data.index(max(self.fft_data))
         # print(self.fft_data.index(max(self.fft_data)))
-        # self.plt.plot(x=self.axis, y=self.fft_data, clear=True, pen="y")  # symbol="o", symbolPen="y", symbolBrush="b")
+        self.pitchX = np.linspace(0, 99, 100)
+        self.plt.plot(x=self.pitchX, y=self.pitches, clear=True)
+        #self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
 
     def AudioInput(self):
         ret = self.stream.read(self.CHUNK)  # 音声の読み取り(バイナリ) CHUNKが大きいとここで時間かかる
