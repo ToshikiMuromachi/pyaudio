@@ -1,4 +1,8 @@
-#!/usr/local/bin/python3
+#
+# 波形のリアルタイムプロット
+#
+
+# !/usr/local/bin/python3
 # -*- coding:utf-8 -*-
 
 import numpy as np
@@ -9,16 +13,17 @@ from pyqtgraph.Qt import QtCore, QtGui
 
 import pyaudio
 
-sample_rate = 16000
+np.set_printoptions(threshold=np.inf)
+
+sample_rate = 44100
 frame_length = 1024
 frame_shift = 80
 
 
 class PlotWindow:
     def __init__(self):
-
         self.win = pg.GraphicsWindow()
-        self.win.setWindowTitle(u"波形のリアルタイムプロット")
+        self.win.setWindowTitle("波形のリアルタイムプロット")
         self.win.resize(1100, 800)
         self.plt = self.win.addPlot()  # プロットのビジュアル関係
         self.ymin = -100
