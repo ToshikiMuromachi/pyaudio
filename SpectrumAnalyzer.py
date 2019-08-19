@@ -46,17 +46,18 @@ class PlotWindow:
         self.fft_data = self.FFT_AMP(self.data)
         self.axis = np.fft.fftfreq(len(self.data), d=1.0 / self.RATE)
         data = self.fft_data
-        print(data)
-        #datamax = self.fft_data.index(max(self.fft_data))
-        #print(self.fft_data.index(max(self.fft_data)))
-        self.plt.plot(x=self.axis, y=self.fft_data, clear=True, pen="y")  # symbol="o", symbolPen="y", symbolBrush="b")
+        print(np.argmax(data))
+        #print(data.index(max(data)))
+        # datamax = self.fft_data.index(max(self.fft_data))
+        # print(self.fft_data.index(max(self.fft_data)))
+        # self.plt.plot(x=self.axis, y=self.fft_data, clear=True, pen="y")  # symbol="o", symbolPen="y", symbolBrush="b")
 
     def AudioInput(self):
         ret = self.stream.read(self.CHUNK)  # 音声の読み取り(バイナリ) CHUNKが大きいとここで時間かかる
         # バイナリ → 数値(int16)に変換
         # 32768.0=2^16で割ってるのは正規化(絶対値を1以下にすること)
         ret = np.frombuffer(ret, dtype="int16") / 32768.0
-        #print(ret)
+        # print(ret)
         return ret
 
     def FFT_AMP(self, data):
