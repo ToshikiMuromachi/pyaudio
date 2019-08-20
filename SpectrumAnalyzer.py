@@ -8,7 +8,26 @@ import sys
 import pyaudio
 import struct
 
+# 制御関連
+import platform
+
 np.set_printoptions(threshold=np.inf)
+
+
+def beep(freq, dur=100):
+    """
+        ビープ音を鳴らす.
+        @param freq 周波数
+        @param dur  継続時間（ms）
+    """
+    if platform.system() == "Windows":
+        # Windowsの場合は、winsoundというPython標準ライブラリを使います.
+        import winsound
+        winsound.Beep(freq, dur)
+    else:
+        # Macの場合には、Macに標準インストールされたplayコマンドを使います.
+        import os
+        os.system('play -n synth %s sin %s' % (dur / 1000, freq))
 
 
 class PlotWindow:
@@ -42,29 +61,54 @@ class PlotWindow:
         # グラフプロット用
         self.pitches = np.zeros(100)
 
+        # 相槌
+        self.conflict = 0
+
+        # 時間設定
+        self.time = 0
+
+        # ループ回数(デバック用)
+        self.loop = 0
+
     def update(self):
         self.data = np.append(self.data, self.AudioInput())
         if len(self.data) / 1024 > 10:
             self.data = self.data[1024:]
         self.fft_data = self.FFT_AMP(self.data)
         self.axis = np.fft.fftfreq(len(self.data), d=1.0 / self.RATE)
-        data = self.fft_data  # 配列操作用の変数
-        data[data < 5.0] = 0.0  # 1より振幅が小さいものは捨てる
+        self.plotData = self.fft_data  # 配列操作用の変数
+        self.plotData[self.plotData < 5.0] = 0.0  # 1より振幅が小さいものは捨てる
+        self.plotData[self.plotData > 1500.0] = 0.0  # 1500より振幅が小さいものは捨てる
         # print(np.round(data, 2))
-        datamax = np.argmax(data)  # FFTされたものの一番大きいものを取り出す
+        self.datamax = np.argmax(self.plotData)  # FFTされたものの一番大きいものを取り出す
         # print(data[datamax])
         # print(np.round(self.axis[datamax], 2))
 
         # ピッチをグラフにプロットするために配列を用意する
         self.pitches = np.roll(self.pitches, -1)  # ピッチを左にずらす
-        self.nowPitch = abs(self.axis[datamax] * 0.8) # 最新のピッチ。鏡像現象対策で絶対値で出す。fukuno先輩のコードより0.8かけてあげる
+        self.nowPitch = abs(self.axis[self.datamax] * 0.8)  # 最新のピッチ。鏡像現象対策で絶対値で出す。fukuno先輩のコードより0.8かけてあげる
         self.pitches[99] = self.nowPitch
-        print(self.nowPitch)
+        #print(self.nowPitch)
         # print(self.RATE * 1 * self.pitches[99] / data.size) #ピッチ計算最終結果予定
         # print(self.fft_data.index(max(self.fft_data)))
         self.pitchX = np.linspace(0, 99, 100)
         self.plt.plot(x=self.pitchX, y=self.pitches, clear=True)
+        # 音を流す
+        if all(self.pitches[94:99]) == 0 and self.time > 50:
+            self.conflict = int(sum(self.pitches[79:93]) / 20)  # 直近から20個分のピッチを平均する
+            print(self.conflict)
+            beep(self.conflict, 500)
+            self.time = 0
+        #self.loop = self.loop + 1
+        if self.loop > 50:
+            self.conflict = int(sum(self.pitches[79:99]) / 20)  # 直近から20個分のピッチを平均する
+            self.loop = 0
+            print(self.conflict)
+            beep(self.conflict, 500)
         # self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
+
+        self.time = self.time + 1  # 時間を更新する
+        #print(self.time)
 
     def AudioInput(self):
         ret = self.stream.read(self.CHUNK)  # 音声の読み取り(バイナリ) CHUNKが大きいとここで時間かかる
