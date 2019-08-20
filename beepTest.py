@@ -1,5 +1,7 @@
 import platform
 import sys
+import threading
+import time
 
 
 def beep(freq, dur=100):
@@ -36,5 +38,17 @@ beep(880, 100)
 beep(932, 100)
 # ド
 beep(523, 500)
+
+audioThread = threading.Thread(target=beep, args=(100, 100))
+audioThread.start()
+audioThread2 = threading.Thread(target=beep, args=(100, 100))
+time.sleep(5)
+audioThread2.start()
+time.sleep(5)
+audioThread3 = threading.Thread(target=beep, args=(100, 100))
+audioThread3.start()
+time.sleep(5)
+audioThread4 = threading.Thread(target=beep, args=(100, 100))
+audioThread4.start()
 
 sys.exit()

@@ -11,6 +11,7 @@ import struct
 import winsound
 
 # 制御関連
+import random
 import platform
 import threading
 import time
@@ -63,7 +64,8 @@ class PlotWindow:
         self.conflict = 0
 
         # 時間設定
-        self.time = 0
+        self.time = 0 #経過時間
+        self.conflictTime = random.uniform(20, 25) #相槌後経過時間
 
         # ループ回数(デバック用)
         self.loop = 0
@@ -91,17 +93,25 @@ class PlotWindow:
         # print(self.fft_data.index(max(self.fft_data)))
         self.pitchX = np.linspace(0, 99, 100)
         self.plt.plot(x=self.pitchX, y=self.pitches, clear=True)
-        # 音を流す
-        if all(self.pitches[94:99]) == 0 and self.time > 50:
+        # 音を流す [最新のピッチが5個が0の時、開始経過時間、相槌後経過タイマー]
+        if all(self.pitches[94:99]) == 0 and self.time > 50 and self.conflictTime <= 0:
             self.conflict = int(sum(self.pitches[79:93]) / 20)  # 直近から20個分のピッチを平均する
             print(self.conflict)
-            self.time = 0
-            audioThread = threading.Thread(target=beep(self.conflict, 500))
-            audioThread.start()
+            audioThread1 = threading.Thread(target=beep, args=(self.conflict + 37, 200))
+            audioThread1.start()
+            audioThread2 = threading.Thread(target=beep, args=(self.conflict + 87, 200))
+            audioThread2.start()
+            audioThread3 = threading.Thread(target=beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
+            audioThread3.start()
+            audioThread4 = threading.Thread(target=beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
+            audioThread4.start()
+            self.conflictTime = random.uniform(50, 70)
         # self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
-
         self.time = self.time + 1  # 時間を更新する
+        if self.conflictTime > 0:
+            self.conflictTime = int(self.conflictTime - 1)   # 相槌経過後タイマーを更新する
         #print(self.time)
+        #print(self.conflictTime)
 
     def AudioInput(self):
         ret = self.stream.read(self.CHUNK)  # 音声の読み取り(バイナリ) CHUNKが大きいとここで時間かかる
