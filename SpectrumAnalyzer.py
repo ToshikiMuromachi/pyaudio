@@ -8,6 +8,7 @@ import sys
 # 音声関係のライブラリ
 import pyaudio
 import struct
+import winsound
 
 # 制御関連
 import platform
@@ -24,14 +25,7 @@ def beep(freq, dur=100):
         @param freq 周波数
         @param dur  継続時間（ms）
     """
-    if platform.system() == "Windows":
-        # Windowsの場合は、winsoundというPython標準ライブラリを使います.
-        import winsound
-        winsound.Beep(freq, dur)
-    else:
-        # Macの場合には、Macに標準インストールされたplayコマンドを使います.
-        import os
-        os.system('play -n synth %s sin %s' % (dur / 1000, freq))
+    winsound.Beep(freq, dur)
 
 
 class PlotWindow:
