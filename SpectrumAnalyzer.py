@@ -1,4 +1,5 @@
 # プロット関係のライブラリ
+
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
@@ -10,6 +11,9 @@ import struct
 
 # 制御関連
 import platform
+import threading
+import time
+import concurrent.futures
 
 np.set_printoptions(threshold=np.inf)
 
@@ -97,14 +101,9 @@ class PlotWindow:
         if all(self.pitches[94:99]) == 0 and self.time > 50:
             self.conflict = int(sum(self.pitches[79:93]) / 20)  # 直近から20個分のピッチを平均する
             print(self.conflict)
-            beep(self.conflict, 500)
             self.time = 0
-        #self.loop = self.loop + 1
-        if self.loop > 50:
-            self.conflict = int(sum(self.pitches[79:99]) / 20)  # 直近から20個分のピッチを平均する
-            self.loop = 0
-            print(self.conflict)
-            beep(self.conflict, 500)
+            audioThread = threading.Thread(target=beep(self.conflict, 500))
+            audioThread.start()
         # self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
 
         self.time = self.time + 1  # 時間を更新する
