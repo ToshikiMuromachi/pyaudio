@@ -4,73 +4,47 @@ import os
 import subprocess
 import time
 
-host = '127.0.0.1' #localhost
-port = 10500   #julisuサーバーモードのポート
+host = '127.0.0.1'  # localhost
+port = 10500  # julisuサーバーモードのポート
+
 
 def main():
+    # p = subprocess.Popen(["./run-win-dnn-module.bat"], stdout=subprocess.PIPE, shell=True) # julius起動スクリプトを実行
+    # pid = str(p.stdout.read().decode('utf-8')) # juliusのプロセスIDを取得
+    # juliusProcess = subprocess.run("run-win-dnn-module.bat", shell=True)
 
-    #p = subprocess.Popen(["./run-win-dnn-module.bat"], stdout=subprocess.PIPE, shell=True) # julius起動スクリプトを実行
-    #pid = str(p.stdout.read().decode('utf-8')) # juliusのプロセスIDを取得
-    juliusProcess = subprocess.run("./run-win-dnn-module.bat", shell=True)
-
-    time.sleep(3) # 3秒間スリープ
+    time.sleep(3)  # 3秒間スリープ
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((host, port)) #サーバーモードで起動したjuliusに接続
+    client.connect((host, port))  # サーバーモードで起動したjuliusに接続
 
-    try:
-        data = '' # dataの初期化
-        killword ='' # 前回認識した言葉を記憶するための変数
-        while 1:
-            #print(data) # 認識した言葉を表示して確認
-            if '</RECOGOUT>\n.' in data:
+    res = ''
+    while True:
+        # 音声認識の区切りである「改行+.」がくるまで待つ
+        print("にんしきちゅう")
+        while (res.find('\n.') == -1):
+            # Juliusから取得した値を格納していく
+            # res += client.recv(1024)
+            print(client.recv(1024))
 
-                root = ET.fromstring('<?xml version="1.0"?>\n' + data[data.find('<RECOGOUT>'):].replace('\n.', ''))
-                for whypo in root.findall('./SHYPO/WHYPO'):
+        word = ''
+        for line in res.split('\n'):
+            # Juliusから取得した値から認識文字列の行を探す
+            index = line.find('WORD=')
+            print('OK')
+            # 認識文字列があったら...
+            if index != -1:
+                # 認識文字列部分だけを抜き取る
+                line = line[index + 6: line.find('"', index + 6)]
+                # 文字列の開始記号以外を格納していく
+                if line != '[s]':
+                    word = word + line
 
-                    word = whypo.get('WORD')# juliusで認識したWORDをwordに入れる
-                    if word == u'こんにちは':
-                        if killword != ('こんにちは'):
-                            os.system("aplay '/home/pi/Music/konnichiwa.wav'")# 音声ファイルを再生
-                            killword = ('こんにちは')
+            # 「かめら」という文字列を認識したら...
+            if word == 'かめら':
+                print("かめら！！")
+            print(word)
+            res = ''
 
-                    elif word == u'おはよう':
-                        if killword != ('おはよう'):
-                            os.system("aplay '/home/pi/Music/ohayo.wav'")
-                            killword = ('おはよう')
-
-                    elif word == u'こんばんは':
-                        if killword != ('こんばんは'):
-                            os.system("aplay '/home/pi/Music/konbanwa.wav'")
-                            killword = ('こんばんは')
-
-                    elif word == u'ばいばい':
-                        if killword != ('ばいばい'):
-                            os.system("aplay '/home/pi/Music/bye.wav'")
-                            killword = ('ばいばい')
-
-                    elif word == u'せもぽぬめ':
-                        os.system("aplay '/home/pi/Music/secret.wav'")
-                        killword = ('シークレット')
-
-                    elif word == u'おやすみ':
-                        os.system("aplay '/home/pi/Music/oyasumi.wav'")
-                        killword = ('おやすみ')
-
-                    else:
-                        os.system("aplay '/home/pi/Music/name.wav'")
-                        killword = ('name')
-                    print (word) # wordを表示
-                    data = '' # dataの初期化
-
-            else:
-                data += str(client.recv(1024).decode('utf-8')) #dataが空のときjuliusからdataに入れる
-                print('NotFound')# juliusに認識する言葉がない。認識していない。
-
-
-    except KeyboardInterrupt:
-        #p.kill()
-        #subprocess.call(["kill " + pid], shell=True)# juliusのプロセスを終了する。
-        client.close()
 
 if __name__ == "__main__":
     main()
