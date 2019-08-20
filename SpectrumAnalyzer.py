@@ -48,23 +48,23 @@ class PlotWindow:
             self.data = self.data[1024:]
         self.fft_data = self.FFT_AMP(self.data)
         self.axis = np.fft.fftfreq(len(self.data), d=1.0 / self.RATE)
-        data = self.fft_data    #配列操作用の変数
-        data[data < 5.0] = 0.0    #1より振幅が小さいものは捨てる
-        #print(np.round(data, 2))
-        datamax = np.argmax(data)   #FFTされたものの一番大きいものを取り出す
-        #print(data[datamax])
-        #print(np.round(self.axis[datamax], 2))
+        data = self.fft_data  # 配列操作用の変数
+        data[data < 5.0] = 0.0  # 1より振幅が小さいものは捨てる
+        # print(np.round(data, 2))
+        datamax = np.argmax(data)  # FFTされたものの一番大きいものを取り出す
+        # print(data[datamax])
+        # print(np.round(self.axis[datamax], 2))
 
-        #ピッチをグラフにプロットするために配列を用意する
-        self.pitches = np.roll(self.pitches, -1)    #ピッチを左にずらす
-        self.nowPitch = abs(self.axis[datamax] * 0.8)
-        self.pitches[99] =  self.nowPitch   #最新のピッチ。鏡像現象対策で絶対値で出す。fukuno先輩のコードより0.8かけてあげる
+        # ピッチをグラフにプロットするために配列を用意する
+        self.pitches = np.roll(self.pitches, -1)  # ピッチを左にずらす
+        self.nowPitch = abs(self.axis[datamax] * 0.8) # 最新のピッチ。鏡像現象対策で絶対値で出す。fukuno先輩のコードより0.8かけてあげる
+        self.pitches[99] = self.nowPitch
         print(self.nowPitch)
-        #print(self.RATE * 1 * self.pitches[99] / data.size) #ピッチ計算最終結果予定
+        # print(self.RATE * 1 * self.pitches[99] / data.size) #ピッチ計算最終結果予定
         # print(self.fft_data.index(max(self.fft_data)))
         self.pitchX = np.linspace(0, 99, 100)
         self.plt.plot(x=self.pitchX, y=self.pitches, clear=True)
-        #self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
+        # self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
 
     def AudioInput(self):
         ret = self.stream.read(self.CHUNK)  # 音声の読み取り(バイナリ) CHUNKが大きいとここで時間かかる
