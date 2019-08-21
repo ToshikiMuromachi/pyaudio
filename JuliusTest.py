@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 import os
 import subprocess
 import time
+import random
 
 host = '127.0.0.1'  # localhost
 port = 10500  # julisuサーバーモードのポート
@@ -18,19 +19,21 @@ def main():
     client.connect((host, port))  # サーバーモードで起動したjuliusに接続
 
     res = ''
+    startTime = 0
+    nextTime = int(random.uniform(10, 20))
+    recentlyWord = ''
+    message = ''
     while True:
+        startTime += 1
         # 音声認識の区切りである「改行+.」がくるまで待つ
-        print("にんしきちゅう")
         while (res.find('\n.') == -1):
             # Juliusから取得した値を格納していく
             res += client.recv(1024).decode('shift-jis')
-            #print("ニンシキ  :  " + res)
 
         word = ''
         for line in res.split('\n'):
             # Juliusから取得した値から認識文字列の行を探す
             index = line.find('WORD=')
-            print('OK')
             # 認識文字列があったら...
             if index != -1:
                 # 認識文字列部分だけを抜き取る
@@ -39,11 +42,34 @@ def main():
                 if line != '[s]':
                     word = word + line
 
-            # 「かめら」という文字列を認識したら...
-            if word == 'かめら':
-                print("かめら！！")
-            print("word : "+word)
+            # 認識された文字がある場合
+            if len(word) != 0:
+                #print("word : "+word)
+                recentlyWord = word
+
+            # nextTimeを超過した場合
+            if startTime >= nextTime:
+                print("音声合成 : " + recentlyWord)
+                nextTime = nextTime + int(random.uniform(10, 20))
+                message = recentlyWord
+                path = [
+                    'wsl echo \'',
+                    message,
+                    '\' | ',
+                    'wsl open_jtalk',
+                    ' -x /var/lib/mecab/dic/open-jtalk/naist-jdic',
+                    ' -m /usr/share/hts-voice/nitech-jp-atr503-m001/nitech_jp_atr503_m001.htsvoice',
+                    ' -ow /mnt/c/home/OpenJTalk/voice.wav',
+                    ' -r 1.0',
+                    ' -a 0.3',
+                    ' -jf 1.0',
+                    ' -fm -5.0', ]
+                path = ''.join(path)
+                result = subprocess.run(path, shell=True)
+                print('かきこみしゅうりょう')
+
             res = ''
+            #print("TIME : " + str(startTime) + "NEXT -> " + str(nextTime))
 
 
 if __name__ == "__main__":
