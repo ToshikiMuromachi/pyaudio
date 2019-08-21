@@ -20,15 +20,6 @@ import concurrent.futures
 np.set_printoptions(threshold=np.inf)
 
 
-def beep(freq, dur=100):
-    """
-        ビープ音を鳴らす.
-        @param freq 周波数
-        @param dur  継続時間（ms）
-    """
-    winsound.Beep(freq, dur)
-
-
 class PlotWindow:
     def __init__(self):
         # マイクインプット設定
@@ -62,10 +53,11 @@ class PlotWindow:
 
         # 相槌
         self.conflict = 0
+        self.conflictFlag = True
 
         # 時間設定
-        self.time = 0 #経過時間
-        self.conflictTime = random.uniform(20, 25) #相槌後経過時間
+        self.time = 0  # 経過時間
+        self.conflictTime = random.uniform(20, 25)  # 相槌後経過時間
 
         # ループ回数(デバック用)
         self.loop = 0
@@ -88,30 +80,33 @@ class PlotWindow:
         self.pitches = np.roll(self.pitches, -1)  # ピッチを左にずらす
         self.nowPitch = abs(self.axis[self.datamax] * 0.8)  # 最新のピッチ。鏡像現象対策で絶対値で出す。fukuno先輩のコードより0.8かけてあげる
         self.pitches[99] = self.nowPitch
-        #print(self.nowPitch)
+        # print(self.nowPitch)
         # print(self.RATE * 1 * self.pitches[99] / data.size) #ピッチ計算最終結果予定
         # print(self.fft_data.index(max(self.fft_data)))
         self.pitchX = np.linspace(0, 99, 100)
         self.plt.plot(x=self.pitchX, y=self.pitches, clear=True)
-        # 音を流す [最新のピッチが5個が0の時、開始経過時間、相槌後経過タイマー]
-        if all(self.pitches[94:99]) == 0 and self.time > 50 and self.conflictTime <= 0:
+        # 音を流す [最新のピッチが5個が0の時、開始経過時間、相槌後経過タイマー、無音区間突入後相槌してるかフラグ(TRUEなら相槌可能)]
+        if all(self.pitches[94:99]) == 0 and self.time > 50 and self.conflictTime <= 0 and self.conflictFlag:
             self.conflict = int(sum(self.pitches[79:93]) / 20)  # 直近から20個分のピッチを平均する
             print(self.conflict)
-            audioThread1 = threading.Thread(target=beep, args=(self.conflict + 37, 200))
+            audioThread1 = threading.Thread(target=self.beep, args=(self.conflict + 37, 200))
             audioThread1.start()
-            audioThread2 = threading.Thread(target=beep, args=(self.conflict + 87, 200))
+            audioThread2 = threading.Thread(target=self.beep, args=(self.conflict + 87, 200))
             audioThread2.start()
-            audioThread3 = threading.Thread(target=beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
+            audioThread3 = threading.Thread(target=self.beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
             audioThread3.start()
-            audioThread4 = threading.Thread(target=beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
+            audioThread4 = threading.Thread(target=self.beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
             audioThread4.start()
             self.conflictTime = random.uniform(50, 70)
+            self.conflictFlag = False
+        if all(self.pitches[94:99]) != 0:
+            self.conflictFlag = True    # 音を検出したら相槌可能フラグを立ててあげる
         # self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
         self.time = self.time + 1  # 時間を更新する
         if self.conflictTime > 0:
-            self.conflictTime = int(self.conflictTime - 1)   # 相槌経過後タイマーを更新する
-        #print(self.time)
-        #print(self.conflictTime)
+            self.conflictTime = int(self.conflictTime - 1)  # 相槌経過後タイマーを更新する
+        # print(self.time)
+        # print(self.conflictTime)
 
     def AudioInput(self):
         ret = self.stream.read(self.CHUNK)  # 音声の読み取り(バイナリ) CHUNKが大きいとここで時間かかる
@@ -127,8 +122,31 @@ class PlotWindow:
         data = np.abs(data)
         return data
 
+    def beep(self, freq, dur=100):
+        """
+            ビープ音を鳴らす.
+            @param freq 周波数
+            @param dur  継続時間（ms）
+        """
+        winsound.Beep(freq, dur)
+
+
+class x12345:
+    def __init__(self):
+        self.x = 5
+        Thread = threading.Thread(target=self.main)
+        Thread.start()
+
+    def main(self):
+        self.x = self.x * self.x
+        while True:
+            self.x = random.uniform(0, 500)
+            print("x12345 : " + str(self.x))
+            time.sleep(0.5)
+
 
 if __name__ == "__main__":
     plotwin = PlotWindow()
+    xxxxxxxx = x12345()
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()

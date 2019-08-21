@@ -20,15 +20,6 @@ import concurrent.futures
 np.set_printoptions(threshold=np.inf)
 
 
-def beep(freq, dur=100):
-    """
-        ビープ音を鳴らす.
-        @param freq 周波数
-        @param dur  継続時間（ms）
-    """
-    winsound.Beep(freq, dur)
-
-
 class PlotWindow:
     def __init__(self):
         # マイクインプット設定
@@ -98,13 +89,13 @@ class PlotWindow:
         if all(self.pitches[94:99]) == 0 and self.time > 50 and self.conflictTime <= 0 and self.conflictFlag:
             self.conflict = int(sum(self.pitches[79:93]) / 20)  # 直近から20個分のピッチを平均する
             print(self.conflict)
-            audioThread1 = threading.Thread(target=beep, args=(self.conflict + 37, 200))
+            audioThread1 = threading.Thread(target=self.beep, args=(self.conflict + 37, 200))
             audioThread1.start()
-            audioThread2 = threading.Thread(target=beep, args=(self.conflict + 87, 200))
+            audioThread2 = threading.Thread(target=self.beep, args=(self.conflict + 87, 200))
             audioThread2.start()
-            audioThread3 = threading.Thread(target=beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
+            audioThread3 = threading.Thread(target=self.beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
             audioThread3.start()
-            audioThread4 = threading.Thread(target=beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
+            audioThread4 = threading.Thread(target=self.beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
             audioThread4.start()
             self.conflictTime = random.uniform(50, 70)
             self.conflictFlag = False
@@ -130,6 +121,14 @@ class PlotWindow:
         data = np.fft.fft(data)
         data = np.abs(data)
         return data
+
+    def beep(self, freq, dur=100):
+        """
+            ビープ音を鳴らす.
+            @param freq 周波数
+            @param dur  継続時間（ms）
+        """
+        winsound.Beep(freq, dur)
 
 
 if __name__ == "__main__":
