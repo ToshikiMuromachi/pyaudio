@@ -23,8 +23,8 @@ def main():
         print("にんしきちゅう")
         while (res.find('\n.') == -1):
             # Juliusから取得した値を格納していく
-            # res += client.recv(1024)
-            print(client.recv(1024))
+            res += client.recv(1024).decode('shift-jis')
+            #print("ニンシキ  :  " + res)
 
         word = ''
         for line in res.split('\n'):
@@ -42,7 +42,7 @@ def main():
             # 「かめら」という文字列を認識したら...
             if word == 'かめら':
                 print("かめら！！")
-            print(word)
+            print("word : "+word)
             res = ''
 
 
