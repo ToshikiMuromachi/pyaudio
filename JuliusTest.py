@@ -102,8 +102,6 @@ def voice(message):
     stream.close()
     p.terminate()
 
-    print('かきこみしゅうりょう')
-
 
 if __name__ == "__main__":
     main()
