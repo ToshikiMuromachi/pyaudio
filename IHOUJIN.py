@@ -146,6 +146,7 @@ class x12345:
             print("x12345 : " + str(self.x))
             time.sleep(0.5)
 
+
 class Julius:
     def __init__(self):
         self.host = '127.0.0.1'  # localhost
@@ -241,9 +242,27 @@ class Julius:
         p.terminate()
 
 
+class UDP:
+    def __init__(self):
+        self.host = 'localhost'  # お使いのサーバーのホスト名を入れます
+        self.port = 8065  # 適当なPORTを指定してあげます
+        self.myClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # オブジェクトの作成をします
+        udpThread = threading.Thread(target=self.main)
+        udpThread.start()
+
+    def main(self):
+        while True:
+            a = random.randrange(3)
+            result = str(a)
+            print(a)
+            self.myClient.sendto(result.encode('utf-8'), (self.host, self.port))  # 適当なデータを送信します（届く側にわかるように）
+            time.sleep(1.0)
+
+
 if __name__ == "__main__":
     plotwin = PlotWindow()
     juliusUtterance = Julius()
+    unityUDP = UDP()
     #xxxxxxxx = x12345()
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
