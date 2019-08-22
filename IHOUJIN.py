@@ -89,6 +89,9 @@ class PlotWindow:
         self.plt.plot(x=self.pitchX, y=self.pitches, clear=True)
         # 音を流す [最新のピッチが5個が0の時、開始経過時間、相槌後経過タイマー、無音区間突入後相槌してるかフラグ(TRUEなら相槌可能)]
         if all(self.pitches[94:99]) == 0 and self.time > 50 and self.conflictTime <= 0 and self.conflictFlag:
+            # 相槌状況をUnityに送信する
+            conflictUDPThread = threading.Thread(target=self.conflictUDP)
+            conflictUDPThread.start()
             self.conflict = int(sum(self.pitches[79:93]) / 20)  # 直近から20個分のピッチを平均する
             print(self.conflict)
             audioThread1 = threading.Thread(target=self.beep, args=(self.conflict + 37, 200))
@@ -132,19 +135,10 @@ class PlotWindow:
         """
         winsound.Beep(freq, dur)
 
-
-class x12345:
-    def __init__(self):
-        self.x = 5
-        Thread = threading.Thread(target=self.main)
-        Thread.start()
-
-    def main(self):
-        self.x = self.x * self.x
-        while True:
-            self.x = random.uniform(0, 500)
-            print("x12345 : " + str(self.x))
-            time.sleep(0.5)
+    def conflictUDP(self):
+        message = 'conflict : True'
+        myClient.sendto(message.encode('utf-8'), (host, port))  # 適当なデータを送信します（届く側にわかるように）
+        time.sleep(0.1)
 
 
 class Julius:
@@ -199,12 +193,13 @@ class Julius:
                     message = recentlyWord
                     audioStartThread = threading.Thread(target=self.voice, args=(message,))
                     audioStartThread.start()
+                    juliusUDPThread = threading.Thread(target=self.juliusUDP, args=(message,))
+                    juliusUDPThread.start()
 
                 res = ''
                 # print("TIME : " + str(startTime) + "NEXT -> " + str(nextTime))
 
     def voice(self, message):
-        ms = 'ててふぉふぉふぉふぉふぉて'
         # 音声合成
         path = [
             'wsl echo \'',
@@ -241,39 +236,33 @@ class Julius:
         stream.close()
         p.terminate()
 
+    def juliusUDP(self, message):
+        myClient.sendto(message.encode('utf-8'), (host, port))  # 適当なデータを送信します（届く側にわかるように）
+        time.sleep(0.1)
+
 
 class UDP:
+    # UDP通信生存確認用
     def __init__(self):
-
         udpThread = threading.Thread(target=self.main)
         udpThread.start()
 
     def main(self):
         while True:
-            result = "0727"
+            result = "1"
             myClient.sendto(result.encode('utf-8'), (host, port))  # 適当なデータを送信します（届く側にわかるように）
-            time.sleep(1.0)
-
-
-class UDPVariable:
-    # クラス変数として保持
-    def __init__(self):
-        self.a = random.randrange(3)
-        self.result = str(self.a)
-        # print(self.result)
+            time.sleep(5.0)
 
 
 if __name__ == "__main__":
-    # UDP通信用グローバル変数
-    plotwin = PlotWindow()
-    juliusUtterance = Julius()
-    globalVariable = UDPVariable()
-
     # Unity通信用UDP
     host = 'localhost'  # お使いのサーバーのホスト名を入れます
     port = 8065  # 適当なPORTを指定してあげます
     myClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # オブジェクトの作成をします
     unityUDP = UDP()
+
+    plotwin = PlotWindow()
+    juliusUtterance = Julius()
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
         QtGui.QApplication.instance().exec_()
