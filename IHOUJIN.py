@@ -102,7 +102,7 @@ class PlotWindow:
             self.conflictTime = random.uniform(50, 70)
             self.conflictFlag = False
         if all(self.pitches[94:99]) != 0:
-            self.conflictFlag = True    # 音を検出したら相槌可能フラグを立ててあげる
+            self.conflictFlag = True  # 音を検出したら相槌可能フラグを立ててあげる
         # self.plt.plot(x=self.axis, y=self.fft_data, clear=True)  # symbol="o", symbolPen="y", symbolBrush="b")
         self.time = self.time + 1  # 時間を更新する
         if self.conflictTime > 0:
@@ -244,26 +244,36 @@ class Julius:
 
 class UDP:
     def __init__(self):
-        self.host = 'localhost'  # お使いのサーバーのホスト名を入れます
-        self.port = 8065  # 適当なPORTを指定してあげます
-        self.myClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # オブジェクトの作成をします
+
         udpThread = threading.Thread(target=self.main)
         udpThread.start()
 
     def main(self):
         while True:
-            a = random.randrange(3)
-            result = str(a)
-            print(a)
-            self.myClient.sendto(result.encode('utf-8'), (self.host, self.port))  # 適当なデータを送信します（届く側にわかるように）
+            result = "0727"
+            myClient.sendto(result.encode('utf-8'), (host, port))  # 適当なデータを送信します（届く側にわかるように）
             time.sleep(1.0)
 
 
+class UDPVariable:
+    # クラス変数として保持
+    def __init__(self):
+        self.a = random.randrange(3)
+        self.result = str(self.a)
+        # print(self.result)
+
+
 if __name__ == "__main__":
+    # UDP通信用グローバル変数
     plotwin = PlotWindow()
     juliusUtterance = Julius()
+    globalVariable = UDPVariable()
+
+    # Unity通信用UDP
+    host = 'localhost'  # お使いのサーバーのホスト名を入れます
+    port = 8065  # 適当なPORTを指定してあげます
+    myClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # オブジェクトの作成をします
     unityUDP = UDP()
-    #xxxxxxxx = x12345()
 
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-         QtGui.QApplication.instance().exec_()
+        QtGui.QApplication.instance().exec_()
