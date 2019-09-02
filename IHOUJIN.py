@@ -237,6 +237,7 @@ class Julius:
         p.terminate()
 
     def juliusUDP(self, message):
+        message = "julius"        # メッセージを文ではなく、信号用に変更
         myClient.sendto(message.encode('utf-8'), (host, port))  # 適当なデータを送信します（届く側にわかるように）
         time.sleep(0.1)
 
