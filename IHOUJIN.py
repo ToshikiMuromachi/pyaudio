@@ -94,14 +94,8 @@ class PlotWindow:
             conflictUDPThread.start()
             self.conflict = int(sum(self.pitches[79:93]) / 20)  # 直近から20個分のピッチを平均する
             print(self.conflict)
-            audioThread1 = threading.Thread(target=self.beep, args=(self.conflict + 37, 200))
+            audioThread1 = threading.Thread(target=self.voice, args=(self.conflict, ))
             audioThread1.start()
-            audioThread2 = threading.Thread(target=self.beep, args=(self.conflict + 87, 200))
-            audioThread2.start()
-            audioThread3 = threading.Thread(target=self.beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
-            audioThread3.start()
-            audioThread4 = threading.Thread(target=self.beep, args=(self.conflict + int(random.uniform(137, 187)), 200))
-            audioThread4.start()
             self.conflictTime = random.uniform(50, 70)
             self.conflictFlag = False
         if all(self.pitches[94:99]) != 0:
@@ -135,8 +129,53 @@ class PlotWindow:
         """
         winsound.Beep(freq, dur)
 
+    def voice(self, freq):
+        # 音声合成
+        # ピッチを0-500Hzまでの間で確認。-10.0から10.0の間に収める
+        pathFreq = freq
+        if pathFreq > 500:
+            pathFreq = 500
+        pathFreq = pathFreq / 500 * 10 * 2 - 10
+        print(pathFreq)
+        path = [
+            'wsl echo \'',
+            'うん',
+            '\' | ',
+            'wsl open_jtalk',
+            ' -x /var/lib/mecab/dic/open-jtalk/naist-jdic',
+            ' -m /usr/share/hts-voice/nitech-jp-atr503-m001/nitech_jp_atr503_m001.htsvoice',
+            ' -ow /mnt/c/home/OpenJTalk/conflictVoice.wav',
+            ' -r 1.0',
+            ' -a 0.3',
+            ' -jf 1.0',
+            ' -fm ',
+            str(pathFreq),
+        ]
+        path = ''.join(path)
+        result = subprocess.run(path, shell=True)
+
+        # 音声再生
+        time.sleep(0.1)
+        wf = wave.open('C:\\home\\OpenJTalk\\conflictVoice.wav', "r")
+
+        # ストリームを開く
+        p = pyaudio.PyAudio()
+        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                        channels=wf.getnchannels(),
+                        rate=wf.getframerate(),
+                        output=True)
+
+        # 音声を再生
+        chunk = 1024
+        data = wf.readframes(chunk)
+        while data != '':
+            stream.write(data)
+            data = wf.readframes(chunk)
+        stream.close()
+        p.terminate()
+
     def conflictUDP(self):
-        message = 'conflict : True'
+        message = 'conflict'
         myClient.sendto(message.encode('utf-8'), (host, port))  # 適当なデータを送信します（届く側にわかるように）
         time.sleep(0.1)
 
@@ -251,15 +290,15 @@ class UDP:
     def main(self):
         while True:
             result = "1"
-            myClient.sendto(result.encode('utf-8'), (host, port))  # 適当なデータを送信します（届く側にわかるように）
+            myClient.sendto(result.encode('utf-8'), (host, port))  # 適当なデータを送信（届く側にわかるように）
             time.sleep(5.0)
 
 
 if __name__ == "__main__":
     # Unity通信用UDP
-    host = 'localhost'  # お使いのサーバーのホスト名を入れます
-    port = 8065  # 適当なPORTを指定してあげます
-    myClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # オブジェクトの作成をします
+    host = 'localhost'  # サーバーのホスト名
+    port = 8065  # 適当なポート
+    myClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # オブジェクトの作成
     unityUDP = UDP()
 
     plotwin = PlotWindow()
