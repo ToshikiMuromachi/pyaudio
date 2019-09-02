@@ -137,9 +137,10 @@ class PlotWindow:
             pathFreq = 500
         pathFreq = pathFreq / 500 * 10 * 2 - 10
         print(pathFreq)
+        message = random.choice(('うん', 'うん　うん', 'はー', 'ほー'))
         path = [
             'wsl echo \'',
-            'うん',
+            message,
             '\' | ',
             'wsl open_jtalk',
             ' -x /var/lib/mecab/dic/open-jtalk/naist-jdic',
@@ -225,8 +226,8 @@ class Julius:
                     # print("word : "+word)
                     recentlyWord = word
 
-                # nextTimeを超過した場合
-                if startTime >= nextTime:
+                # nextTimeを超過した場合　と　認識文字が一文字以上の時
+                if startTime >= nextTime and len(word) != 1:
                     print("音声合成 : " + recentlyWord)
                     nextTime = nextTime + int(random.uniform(10, 20))
                     message = recentlyWord
