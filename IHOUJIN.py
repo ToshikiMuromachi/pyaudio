@@ -137,7 +137,7 @@ class PlotWindow:
             pathFreq = 500
         pathFreq = pathFreq / 500 * 10 * 2 - 10
         print(pathFreq)
-        message = random.choice(('うん', 'うん　うん', 'はー', 'ほー'))
+        message = random.choice(('うん', 'うん　うん', 'はい', 'ほう'))
         path = [
             'wsl echo \'',
             message,
